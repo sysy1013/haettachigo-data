@@ -72,3 +72,47 @@ def test_manifest():
     ):
         with pytest.raises(ValidationError):
             validate_manifest(bad, ["a", "b"])
+
+
+FX_GOOD = {
+    "id": "usdkrw",
+    "name": "원/달러 환율",
+    "category": "fx",
+    "currency": "KRW",
+    "listedFrom": "2015-01",
+    "prices": [["2015-01", 1101.0], ["2015-02", 1105.0], ["2015-03", 1100.0], ["2026-09", 1320.0]],
+}
+
+
+def fx_doc(prices):
+    return dict(FX_GOOD, prices=prices, listedFrom=prices[0][0])
+
+
+def test_clean_fx_passes():
+    validate_asset(FX_GOOD, "2026-09")
+
+
+def test_fx_glitch_value_rejected_anywhere_in_history():
+    doc = fx_doc([["2015-01", 1101.0], ["2015-02", 0.11], ["2015-03", 1105.0], ["2026-09", 1320.0]])
+    with pytest.raises(ValidationError, match=r"usdkrw.*2015-02"):
+        validate_asset(doc, "2026-09")
+
+
+def test_fx_out_of_range_high_rejected():
+    doc = fx_doc([["2015-01", 1101.0], ["2015-02", 3100.0], ["2026-09", 1320.0]])
+    with pytest.raises(ValidationError, match=r"usdkrw.*2015-02"):
+        validate_asset(doc, "2026-09")
+
+
+def test_fx_large_monthly_jump_rejected():
+    doc = fx_doc([["2015-01", 1000.0], ["2015-02", 1350.0], ["2015-03", 1340.0], ["2026-09", 1320.0]])
+    with pytest.raises(ValidationError, match=r"usdkrw.*2015-02"):
+        validate_asset(doc, "2026-09")
+
+
+def test_non_fx_historical_jump_still_allowed():
+    doc = mutated(
+        prices=[["2026-06", 100.0], ["2026-07", 270.0], ["2026-08", 280.0], ["2026-09", 290.0]],
+        listedFrom="2026-06",
+    )
+    validate_asset(doc, "2026-09")

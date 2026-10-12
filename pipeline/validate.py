@@ -6,6 +6,8 @@ from .build import month_end
 CATEGORIES = {"kr_stock", "us_stock", "crypto", "commodity", "fx"}
 CURRENCIES = {"KRW", "USD"}
 MAX_JUMP = 0.9
+FX_MIN, FX_MAX = 500, 3000  # 원/달러 환율 허용 범위
+FX_MAX_JUMP = 0.3  # 환율 월간 변동 한도 (전체 이력)
 _REQUIRED = ("id", "name", "category", "currency", "listedFrom", "prices")
 _YM = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
@@ -43,9 +45,22 @@ def validate_asset(doc: dict, version: str) -> None:
     if months[-1] != version:
         raise ValidationError(f"{aid}: latest month {months[-1]} != {version}")
 
+    if doc["category"] == "fx":
+        _validate_fx_history(aid, prices)
+
     change = prices[-1][1] / prices[-2][1] - 1
     if abs(change) > MAX_JUMP:
         raise ValidationError(f"{aid}: latest month changed {change:+.0%}")
+
+
+def _validate_fx_history(aid: str, prices: list) -> None:
+    for month, value in prices:
+        if not FX_MIN <= value <= FX_MAX:
+            raise ValidationError(f"{aid}: {month} rate {value} outside [{FX_MIN}, {FX_MAX}]")
+    for (_, prev), (month, value) in zip(prices, prices[1:]):
+        change = value / prev - 1
+        if abs(change) > FX_MAX_JUMP:
+            raise ValidationError(f"{aid}: {month} changed {change:+.0%}")
 
 
 def validate_manifest(doc: dict, asset_ids: list[str]) -> None:
