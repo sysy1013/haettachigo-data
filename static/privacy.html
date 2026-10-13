@@ -4,25 +4,49 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>해따치고 개인정보처리방침</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px 16px; line-height: 1.7; color: #2c2c2a; background: #fff; }
+  h1 { font-size: 24px; } h2 { font-size: 18px; margin-top: 28px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border: 1px solid #d3d1c7; padding: 8px; text-align: left; vertical-align: top; }
+</style>
 </head>
 <body>
 <h1>해따치고 개인정보처리방침</h1>
-<p>시행일: 2026년 10월 12일</p>
+<p>시행일: 2026년 10월 13일 · 최종 변경: 2026년 10월 13일</p>
 
 <h2>1. 개발자가 수집하는 개인정보</h2>
-<p>해따치고 개발자는 이름, 연락처, 계정, 위치 등 이용자의 개인정보를 수집하지 않으며, 별도의 서버나 데이터베이스에 저장하지 않습니다.</p>
+<p>해따치고 개발자는 이름, 연락처, 계정, 위치 등 이용자의 개인정보를 수집하지 않으며, 개발자가 운영하는 서버나 데이터베이스는 없습니다. 회원가입·로그인 기능도 없습니다.</p>
 
-<h2>2. 기기에 저장되는 정보</h2>
-<p>이용자가 입력한 금액·기간 등 계산 값과 앱 설정, 내려받은 시세 데이터는 이용자의 기기 안에만 저장됩니다. 앱을 삭제하면 함께 삭제됩니다.</p>
-
-<h2>3. 제3자 서비스</h2>
+<h2>2. 기기에만 저장되는 정보</h2>
+<p>다음 정보는 이용자의 기기 안에만 저장되며 개발자에게 전송되지 않습니다. 기기 백업(Google 드라이브 자동 백업)에도 포함되지 않습니다.</p>
 <ul>
-  <li><strong>Google AdMob</strong>: 광고 제공과 성과 측정을 위해 광고 ID 등 기기 식별 정보를 수집할 수 있습니다. 자세한 내용은 <a href="https://policies.google.com/technologies/ads">Google 광고 정책</a>을 참고하세요.</li>
-  <li><strong>Google Firebase (Crashlytics, Remote Config)</strong>: 앱 안정성 개선과 설정 배포를 위해 오류 기록과 기기 정보(기종, OS 버전 등)를 수집할 수 있습니다. 자세한 내용은 <a href="https://firebase.google.com/support/privacy">Firebase 개인정보 안내</a>를 참고하세요.</li>
-  <li><strong>GitHub Pages</strong>: 앱이 시세 데이터를 내려받을 때 GitHub 서버에 IP 주소 등 접속 기록이 남을 수 있습니다. 자세한 내용은 <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub 개인정보 처리방침</a>을 참고하세요.</li>
+  <li>통장 기록: 참은 항목, 금액, 날짜, 메모, 루틴, 목표, 관심 종목</li>
+  <li>최근 계산 기록, 공유 횟수, 앱 설정(효과음 등)</li>
+  <li>내려받은 공개 시세 데이터</li>
 </ul>
+<p>보유 기간: 이용자가 앱에서 삭제하거나 앱을 삭제할 때까지. 설정의 <strong>통장 초기화</strong>로 언제든 지울 수 있습니다. <strong>통장 백업 내보내기</strong>는 이용자가 직접 선택한 앱으로만 전달되며, 개발자는 그 내용을 받지 않습니다.</p>
 
-<h2>4. 문의</h2>
-<p><a href="https://github.com/sysy1013/haettachigo-data/issues">GitHub 이슈</a>로 문의해 주세요.</p>
+<h2>3. 제3자 서비스가 처리하는 정보</h2>
+<table>
+  <tr><th>서비스</th><th>처리 항목</th><th>목적</th></tr>
+  <tr><td>Google AdMob</td><td>광고 ID, 기기 정보, IP 주소(대략적 위치), 광고 상호작용</td><td>광고 표시·성과 측정·부정 방지</td></tr>
+  <tr><td>Google Firebase (Crashlytics, Remote Config)</td><td>오류 기록, 기기 정보(기종·OS 버전), 설치 ID</td><td>앱 안정성 개선, 설정 배포</td></tr>
+  <tr><td>GitHub Pages</td><td>IP 주소 등 접속 기록</td><td>공개 시세 데이터 제공</td></tr>
+</table>
+<p>각 서비스의 처리 방식은 <a href="https://policies.google.com/technologies/ads">Google 광고 정책</a>, <a href="https://firebase.google.com/support/privacy">Firebase 개인정보 안내</a>, <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub 개인정보 처리방침</a>을 따릅니다. 사용자 입력값(금액·메모 등)은 위 서비스에 전송하지 않습니다.</p>
+
+<h2>4. 광고 ID 거부 방법</h2>
+<p>Android 설정 → 개인정보 보호(또는 Google) → 광고 → <strong>광고 ID 삭제</strong>를 선택하면 맞춤 광고에 광고 ID가 쓰이지 않습니다. 유럽 경제 지역 등에서는 앱 첫 실행 시 표시되는 동의 화면에서 선택할 수 있습니다.</p>
+
+<h2>5. 아동의 개인정보</h2>
+<p>해따치고는 만 14세 미만 아동을 대상으로 하지 않으며, 아동의 개인정보를 알면서 수집하지 않습니다.</p>
+
+<h2>6. 개인정보 보호책임자 및 문의</h2>
+<p>개인정보 보호책임자: 해따치고 개발자<br>
+문의: <a href="https://github.com/sysy1013/haettachigo-data/issues">GitHub 이슈</a></p>
+
+<h2>7. 방침 변경</h2>
+<p>이 방침이 바뀌면 이 페이지에 시행일과 함께 게시합니다.</p>
 </body>
 </html>
