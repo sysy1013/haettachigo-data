@@ -92,3 +92,49 @@ def test_cli_prints_dropped_months(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "usdkrw: dropped 2015-02, 2015-10" in out
     assert "usd: dropped 2015-02, 2015-10" in out
+
+
+def latest_fetch(ticker):
+    if ticker == "KRW=X":
+        return ("2026-10-10", 1335.0)
+    if ticker == "AAPL":
+        raise RuntimeError("down")
+    return ("2026-10-10", 125.0)
+
+
+def test_build_site_with_latest_writes_latest_json(tmp_path):
+    docs = build_site(tmp_path, fetch=fake_fetch_factory([]), today=TODAY, latest_fetch=latest_fetch)
+    latest = json.loads((tmp_path / "latest.json").read_text(encoding="utf-8"))
+    assert latest == docs["latest.json"]
+    assert latest["asOf"] == "2026-10-10"
+    assert latest["usdkrw"] == 1335.0
+    assert "AAPL" not in latest["prices"]
+    assert latest["prices"]["005930"] == 125.0
+    assert latest["prices"]["usd"] == 1335.0
+    assert len(latest["prices"]) == len(ASSETS) - 1
+
+
+def test_build_site_without_latest_fetch_skips_latest(tmp_path):
+    docs = build_site(tmp_path, fetch=fake_fetch_factory([]), today=TODAY)
+    assert "latest.json" not in docs
+    assert not (tmp_path / "latest.json").exists()
+
+
+def test_build_site_skips_latest_when_fx_fails(tmp_path):
+    def fx_down(ticker):
+        if ticker == "KRW=X":
+            raise RuntimeError("down")
+        return ("2026-10-10", 125.0)
+
+    docs = build_site(tmp_path, fetch=fake_fetch_factory([]), today=TODAY, latest_fetch=fx_down)
+    assert "latest.json" not in docs
+    assert (tmp_path / "manifest.json").exists()
+
+
+def test_cli_with_latest(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(main_mod, "fetch_monthly_closes", fake_fetch_factory([]))
+    monkeypatch.setattr(main_mod, "fetch_latest_close", latest_fetch)
+    monkeypatch.setattr(main_mod, "_today", lambda: TODAY)
+    main_mod.main(["--out", str(tmp_path), "--with-latest"])
+    assert (tmp_path / "latest.json").exists()
+    assert "latest 2026-10-10" in capsys.readouterr().out

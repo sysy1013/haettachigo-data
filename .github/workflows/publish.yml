@@ -2,7 +2,8 @@ name: publish-data
 
 on:
   schedule:
-    - cron: "0 0 2 * *"
+    # 평일 매일 22:00 UTC (미국장 마감 후). 월간 데이터 + latest.json 전체 재빌드
+    - cron: "0 22 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -22,7 +23,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt
       - run: python -m pytest -q
-      - run: python -m pipeline.main --out site
+      - run: python -m pipeline.main --out site --with-latest
       - run: cp -r static/. site/
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

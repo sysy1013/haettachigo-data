@@ -7,6 +7,7 @@ from .build import asset_json, last_complete_month, manifest_json
 from .catalog import ASSETS, FX
 from .clean import remove_spikes
 from .fetch import fetch_monthly_closes
+from .latest import build_latest, fetch_latest_close
 from .validate import validate_asset, validate_manifest
 
 
@@ -19,8 +20,11 @@ def build_site(
     fetch=None,
     today: dt.date | None = None,
     dropped: dict[str, list[str]] | None = None,
+    latest_fetch=None,
+    latest_failed: list[str] | None = None,
 ) -> dict[str, dict]:
-    """전체 사이트를 out에 쓴다. dropped를 넘기면 id별로 제거된 튐 값의 달을 채운다."""
+    """전체 사이트를 out에 쓴다. dropped를 넘기면 id별로 제거된 튐 값의 달을 채운다.
+    latest_fetch를 넘기면 일봉 최신가로 latest.json도 만든다(환율 실패 시 생략)."""
     fetch = fetch or fetch_monthly_closes
     version = last_complete_month(today or _today())
     fetched: dict[str, dict[str, float]] = {}
@@ -48,6 +52,12 @@ def build_site(
     validate_manifest(manifest, asset_ids)
     docs["manifest.json"] = manifest
 
+    if latest_fetch is not None:
+        month_end = {d["id"]: d["prices"][-1][1] for d in docs.values() if "prices" in d}
+        latest = build_latest(ASSETS, FX, month_end, latest_fetch, latest_failed)
+        if latest is not None:
+            docs["latest.json"] = latest
+
     for path, doc in docs.items():
         target = out / path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -58,11 +68,26 @@ def build_site(
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="해따치고 시세 데이터 빌드")
     parser.add_argument("--out", default="site", type=pathlib.Path)
+    parser.add_argument("--with-latest", action="store_true", help="일봉 최신가 latest.json 포함")
     args = parser.parse_args(argv)
     dropped: dict[str, list[str]] = {}
-    docs = build_site(args.out, dropped=dropped)
+    failed: list[str] = []
+    docs = build_site(
+        args.out,
+        dropped=dropped,
+        latest_fetch=fetch_latest_close if args.with_latest else None,
+        latest_failed=failed,
+    )
     for aid, months in dropped.items():
         print(f"{aid}: dropped {', '.join(months)}")
+    if args.with_latest:
+        latest = docs.get("latest.json")
+        if latest is None:
+            print("latest: skipped (usdkrw unavailable)")
+        else:
+            print(f"latest {latest['asOf']}: {len(latest['prices'])}/{len(ASSETS)} prices")
+        if failed:
+            print(f"latest: omitted {', '.join(failed)}")
     size = sum(p.stat().st_size for p in args.out.rglob("*.json"))
     print(f"version {docs['manifest.json']['version']}: {len(docs)} files, {size // 1024} KB")
 
