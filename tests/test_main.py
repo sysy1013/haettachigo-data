@@ -135,6 +135,13 @@ def test_cli_with_latest(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(main_mod, "fetch_monthly_closes", fake_fetch_factory([]))
     monkeypatch.setattr(main_mod, "fetch_latest_close", latest_fetch)
     monkeypatch.setattr(main_mod, "_today", lambda: TODAY)
+
+    def daily_fetch(ticker, start):
+        return [("2026-10-09", 1300.0 if ticker == "KRW=X" else 100.0), ("2026-10-10", 1310.0 if ticker == "KRW=X" else 101.0)]
+
+    monkeypatch.setattr(main_mod, "fetch_daily_closes", daily_fetch)
     main_mod.main(["--out", str(tmp_path), "--with-latest"])
     assert (tmp_path / "latest.json").exists()
+    daily = json.loads((tmp_path / "daily.json").read_text(encoding="utf-8"))
+    assert daily["asOf"] == "2026-10-10" and daily["base"] == "2026-10-09"
     assert "latest 2026-10-10" in capsys.readouterr().out

@@ -6,6 +6,7 @@ import pathlib
 from .build import asset_json, last_complete_month, manifest_json
 from .catalog import ASSETS, FX
 from .clean import remove_spikes
+from .daily import build_daily, fetch_daily_closes
 from .fetch import fetch_monthly_closes
 from .latest import build_latest, fetch_latest_close
 from .validate import validate_asset, validate_manifest
@@ -22,6 +23,8 @@ def build_site(
     dropped: dict[str, list[str]] | None = None,
     latest_fetch=None,
     latest_failed: list[str] | None = None,
+    daily_fetch=None,
+    daily_failed: list[str] | None = None,
 ) -> dict[str, dict]:
     """전체 사이트를 out에 쓴다. dropped를 넘기면 id별로 제거된 튐 값의 달을 채운다.
     latest_fetch를 넘기면 일봉 최신가로 latest.json도 만든다(환율 실패 시 생략)."""
@@ -58,6 +61,11 @@ def build_site(
         if latest is not None:
             docs["latest.json"] = latest
 
+    if daily_fetch is not None:
+        daily = build_daily(ASSETS, FX, daily_fetch, daily_failed, today or _today())
+        if daily is not None:
+            docs["daily.json"] = daily
+
     for path, doc in docs.items():
         target = out / path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -72,11 +80,14 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     dropped: dict[str, list[str]] = {}
     failed: list[str] = []
+    daily_failed: list[str] = []
     docs = build_site(
         args.out,
         dropped=dropped,
         latest_fetch=fetch_latest_close if args.with_latest else None,
         latest_failed=failed,
+        daily_fetch=fetch_daily_closes if args.with_latest else None,
+        daily_failed=daily_failed,
     )
     for aid, months in dropped.items():
         print(f"{aid}: dropped {', '.join(months)}")
@@ -88,6 +99,13 @@ def main(argv: list[str] | None = None) -> None:
             print(f"latest {latest['asOf']}: {len(latest['prices'])}/{len(ASSETS)} prices")
         if failed:
             print(f"latest: omitted {', '.join(failed)}")
+        daily = docs.get("daily.json")
+        if daily is None:
+            print("daily: skipped (usdkrw unavailable)")
+        else:
+            print(f"daily {daily['asOf']}: {len(daily['series'])}/{len(ASSETS) + 1} series")
+        if daily_failed:
+            print(f"daily: omitted {', '.join(daily_failed)}")
     size = sum(p.stat().st_size for p in args.out.rglob("*.json"))
     print(f"version {docs['manifest.json']['version']}: {len(docs)} files, {size // 1024} KB")
 
